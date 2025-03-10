@@ -13,5 +13,5 @@ DEEPSEEK_API_KEY=YOUR_DEEPSEEK_API_KEY
 JWT_SECRET=A_JWT_SECRET
 PLATFORM_PASSWORD=A_PLATFORM_PASSWORD
 ```
-Set up an API key with Deepseek, and generate a JWT secret by running `openssl rand -base64 24` on your device, or go to [this site](https://string-gen.vercel.app/).
+Set up an API key with [Deepseek](https://platform.deepseek.com/usage), and generate a JWT secret by running `openssl rand -base64 24` on your device, or go to [this site](https://string-gen.vercel.app/).
 The Platform Passowrd is the password to access the interface so that snoopers cannot use your API key to make arbitrary requests.
