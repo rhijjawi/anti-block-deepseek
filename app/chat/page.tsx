@@ -61,8 +61,9 @@ export default function ChatPage() {
         });
         
         if (!response.ok) {
-          router.push('/');
+          return router.push('/');
         }
+        checkBalance().then((val)=>setBalance(val))
       } catch (error) {
         router.push('/');
       }
