@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { message } = await req.json();
+    const { messages } = await req.json();
 
     const response = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: [{ role: 'user', content: message }],
+        messages,
         stream: true,
       }),
     });

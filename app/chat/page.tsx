@@ -4,9 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Message, Conversation } from '../types';
 import Markdown from 'react-markdown';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { PlusCircleIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ThreeDot } from 'react-loading-indicators';
 
 export default function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,16 +37,20 @@ export default function ChatPage() {
       localStorage.setItem('conversations', JSON.stringify(conversations));
     }
   }, [conversations]);
-
+  const checkBalance = async () => {
+    setRefreshing(true);
+    const response = await fetch('/api/balance', {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    toast.success('Balance checked', {richColors : true});
+    setTimeout(() => setRefreshing(false), 2500);
+    return (Number(data.balance_infos[0].total_balance));
+  };
   useEffect(() => {
-    const checkBalance = async () => {
-      const response = await fetch('/api/balance', {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      setBalance(Number(data.balance_infos[0].total_balance));
-    };
-    checkBalance();
+    if (currentConversation?.messages){
+      
+    }
   }, [currentConversation?.messages]);
 
   useEffect(() => {
@@ -122,7 +132,7 @@ export default function ChatPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ messages: updatedMessages }),
         credentials: 'include',
       });
 
@@ -152,7 +162,10 @@ export default function ChatPage() {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          checkBalance().then((val)=>setBalance(val))
+          break
+        };
 
         const text = new TextDecoder().decode(value);
         assistantMessage.content += text;
@@ -261,8 +274,27 @@ export default function ChatPage() {
             </h1>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">
-              {balance !== null && new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(balance)}
+            <div className="text-sm text-gray-600 flex flex-row gap-x-1">
+              <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" className='cursor-pointer' onClick={()=>checkBalance().then((val)=>setBalance(val))}>
+                  {refreshing ? <ThreeDot color="#000000" style={{fontSize : '10px'}} text="Loading..." textColor="" /> : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(balance!)} 
+                </Button>
+              </TooltipTrigger>
+                <TooltipContent>
+                  Refresh balance
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button className='cursor-pointer w-fit'>
+                    <PlusCircleIcon className='size-4'/>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Top up your balance
+                </TooltipContent>
+              </Tooltip>
             </div>
             <button
               onClick={handleLogout}
@@ -291,6 +323,7 @@ export default function ChatPage() {
                   >
                     <Markdown components={{
                       li: ({ children }) => <li className="my-1">{children}</li>,
+                      hr: () => <hr className="my-4 border-gray-200" />,
                     }}>{message.content}</Markdown>
                   </div>
                 </div>
